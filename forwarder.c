@@ -34,8 +34,6 @@ int main(void)
   int currentPort = 0;
   int mode = MODE;
 
-  printf("Starting in mode");
-  printf("Starting in mode %d", mode);
   //################################################
   //Source socket
   //################################################
