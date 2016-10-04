@@ -1,7 +1,7 @@
 /*
    A UDP forwarder that adds one byte at the end of each datagram to bypass filters
    It does not add an overhead like other possibilities to bypass filters and firewalls (except for the byte)
-*/
+   */
 #include<stdio.h>
 #include<string.h>
 #include<stdlib.h>
@@ -9,6 +9,7 @@
 #include<sys/socket.h>
 #include <unistd.h>
 #include <signal.h>
+#include <limits.h>
 //create this file with destination, source and mode defined
 #include "forwarder.h"
 
@@ -17,6 +18,7 @@
 #define CLIENT 1
 void die(char *);
 void wait();
+char changeChar(char, int);
 
 void die(char *s)
 {
@@ -56,7 +58,7 @@ int main(void)
   {
     die("bind src");
   }
-  
+
   //################################################
   //Destination socket
   //################################################
@@ -92,9 +94,9 @@ int main(void)
 
       //Add byte when the forwarder is in client mode else remove it
       if (mode == CLIENT)
-        recv_len++;
+        changeChar(buf[0], 1);
       else
-        recv_len--;
+        changeChar(buf[0], -1);
 
       //send datagram to the destination server
       if (sendto(socket_dest, buf, recv_len, 0, (struct sockaddr*) &si_dest, slen_src) == -1)
@@ -122,12 +124,12 @@ int main(void)
       {
         die("recvfrom()");
       }
-      
+
       //Add byte when the forwarder is in server mode else remove it
       if (mode == SERVER)
-        recv_len++;
+        changeChar(buf[0], 1);
       else
-        recv_len--;
+        changeChar(buf[0], -1);
 
       //send datagram to client
       if (sendto(socket_src, buf, recv_len, 0, (struct sockaddr*) &si_res_src, slen_dest) == -1)
@@ -139,5 +141,23 @@ int main(void)
   close(socket_src);
   close(socket_dest);
   return 0;
+}
+
+char changeChar(char el, int inc) {
+  if (inc < 0) {
+  //decrement the char
+    if (el > CHAR_MIN)
+      el -= inc;
+    else
+      el = CHAR_MAX;
+  }
+  else {
+  //increment the char
+    if (el < CHAR_MAX)
+      el += inc;
+    else
+      el = CHAR_MIN;
+  }
+  return el;
 }
 
