@@ -13,7 +13,7 @@
 //create this file with destination, source and mode defined
 #include "forwarder.h"
 
-#define BUF_LENGTH 2048
+#define BUF_LENGTH 212992
 #define SERVER 0
 #define CLIENT 1
 void die(char *);
@@ -93,10 +93,13 @@ int main(void)
       }
 
       //Add byte when the forwarder is in client mode else remove it
-      if (mode == CLIENT)
-        changeChar(buf[0], 1);
-      else
-        changeChar(buf[0], -1);
+      int i;
+      for (i = 0; i < recv_len; i++) {
+        if (mode == CLIENT)
+          buf[i] = changeChar(buf[i], 1);
+        else
+          buf[i] = changeChar(buf[i], -1);
+      }
 
       //send datagram to the destination server
       if (sendto(socket_dest, buf, recv_len, 0, (struct sockaddr*) &si_dest, slen_src) == -1)
@@ -126,10 +129,18 @@ int main(void)
       }
 
       //Add byte when the forwarder is in server mode else remove it
-      if (mode == SERVER)
-        changeChar(buf[0], 1);
-      else
-        changeChar(buf[0], -1);
+      //printf("#############################################################\n");
+      //printf("Got this msg form vpn server: %s\n", buf);
+      int i;
+      for (i = 0; i < recv_len; i++) {
+        if (mode == SERVER)
+          buf[i] = changeChar(buf[i], 1);
+        else
+          buf[i] = changeChar(buf[i], -1);
+      }
+
+      //printf("#############################################################\n");
+      //printf("Send this msg to client: %s\n", buf);
 
       //send datagram to client
       if (sendto(socket_src, buf, recv_len, 0, (struct sockaddr*) &si_res_src, slen_dest) == -1)
@@ -144,20 +155,6 @@ int main(void)
 }
 
 char changeChar(char el, int inc) {
-  if (inc < 0) {
-  //decrement the char
-    if (el > CHAR_MIN)
-      el -= inc;
-    else
-      el = CHAR_MAX;
-  }
-  else {
-  //increment the char
-    if (el < CHAR_MAX)
-      el += inc;
-    else
-      el = CHAR_MIN;
-  }
-  return el;
+  return el + inc;
 }
 
