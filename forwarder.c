@@ -13,12 +13,14 @@
 //create this file with destination, source and mode defined
 #include "forwarder.h"
 
-#define BUF_LENGTH 212992
+#define NUMBER_OF_THREADS
+#define BUF_LENGTH  212992
 #define SERVER 0
 #define CLIENT 1
 void die(char *);
 void wait();
 char changeChar(char, int);
+
 
 void die(char *s)
 {
@@ -33,6 +35,7 @@ int main(void)
   int recv_len, socket_src, socket_dest;
   socklen_t slen_src = sizeof(si_src),  slen_dest = sizeof(si_dest);
   char buf[BUF_LENGTH];
+  char buf1[BUF_LENGTH];
   int currentPort = 0;
   int mode = MODE;
 
@@ -123,7 +126,7 @@ int main(void)
 
     //Forward datagrams form the destination server to the client
     if (childPID == 0) {
-      if ((recv_len = recvfrom(socket_dest, buf, BUF_LENGTH, 0, (struct sockaddr *) &si_res_dest, &slen_dest)) == -1)
+      if ((recv_len = recvfrom(socket_dest, buf1, BUF_LENGTH, 0, (struct sockaddr *) &si_res_dest, &slen_dest)) == -1)
       {
         die("recvfrom()");
       }
@@ -134,16 +137,16 @@ int main(void)
       int i;
       for (i = 0; i < recv_len; i++) {
         if (mode == SERVER)
-          buf[i] = changeChar(buf[i], 1);
+          buf1[i] = changeChar(buf1[i], 1);
         else
-          buf[i] = changeChar(buf[i], -1);
+          buf1[i] = changeChar(buf1[i], -1);
       }
 
       //printf("#############################################################\n");
       //printf("Send this msg to client: %s\n", buf);
 
       //send datagram to client
-      if (sendto(socket_src, buf, recv_len, 0, (struct sockaddr*) &si_res_src, slen_dest) == -1)
+      if (sendto(socket_src, buf1, recv_len, 0, (struct sockaddr*) &si_res_src, slen_dest) == -1)
       {
         die("sendto()");
       }
